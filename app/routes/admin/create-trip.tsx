@@ -1,12 +1,13 @@
 import { Header } from "components"
 import { ComboBoxComponent } from "@syncfusion/ej2-react-dropdowns"
 import type { Route } from "./+types/create-trip";
-import { comboBoxItems, selectItems } from "~/constants";
+import { comboBoxItems, selectItems, travelStyles, user } from "~/constants";
 import { cn, formatKey } from "~/lib/utils";
 import { LayerDirective, LayersDirective, MapsComponent } from "@syncfusion/ej2-react-maps";
 import { useState } from "react";
 import { world_map } from "~/constants/world_map";
 import { ButtonComponent } from "@syncfusion/ej2-react-buttons";
+import { useNavigate } from "react-router";
 
 declare interface Country {
   name: string;
@@ -70,10 +71,11 @@ export const loader = async () => {
 
 const CreateTrip = ({ loaderData }: Route.ComponentProps) => {
     const countries = loaderData as Country[];
+    const navigate = useNavigate();
 
     const [formData, setFormData] = useState<TripFormData>({
         country: countries[0]?.name || '',
-        travelSty: '',
+        travelStyle: '',
         interest: '',
         budget: '',
         duration: 0,
@@ -86,7 +88,7 @@ const CreateTrip = ({ loaderData }: Route.ComponentProps) => {
     const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => { 
         e.preventDefault()
         setLoading(true);
-
+        console.log(formData)
         if (!formData.country || !formData.travelStyle || !formData.interest || !formData.budget || !formData.groupType
         ) {
             setError('Please provide values for all fields');
@@ -101,7 +103,24 @@ const CreateTrip = ({ loaderData }: Route.ComponentProps) => {
         }
 
         try {
-            console.log('formData', formData);
+            const response = await fetch('/api/create-trip', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    country: formData.country,
+                    numbersOfDays: formData.duration,
+                    travelStyle: formData.travelStyle,
+                    interests: formData.interest,
+                    budget: formData.budget,
+                    groupType: formData.groupType,
+                    userId: user.$id
+                })
+            })
+            console.log()
+            const result: CreateTripResponse = await response.json();
+
+            if (result?.id) navigate(`/trips/${result.id}`)
+                else console.error('Failed to generate a trip');
         } catch (e) {
             console.error('Error generating trip', e);
         } finally {
@@ -172,9 +191,10 @@ const CreateTrip = ({ loaderData }: Route.ComponentProps) => {
                           id="duration"
                           name="duration"
                           type="number"
+                          value={formData.duration === 0 ? '' : formData.duration}
                           placeholder="Enter a number of days (5, 12...)"
                           className="form-input placeholder:text-gray-100"
-                          onChange={(e) => handleChange('duration', Number(e.target.value))}
+                          onChange={(e) => handleChange('duration', Number(e.target.value) || 0)}
                       />
                   </div>
 

@@ -143,7 +143,7 @@ export const RIGHT_CONFETTI = {
 };
 
 
-export const user = { name: "Tom" };
+export const user = { name: "Tom" ,id:'685ea9b4000fa9b7b815'};
 export const dashboardStats = {
   totalUsers: 12450,
   usersJoined: { currentMonth: 218, lastMonth: 176 },
